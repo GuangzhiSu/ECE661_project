@@ -1,15 +1,18 @@
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import numpy as np
 import torch
 import torch.nn.functional as F
-import time
-from models import MambaStock
-import time
-from dataclasses import dataclass
-from models import Model
+import numpy as np
+
 import argparse
+import time
+from typing import Tuple
+from dataclasses import dataclass
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
 from data import Dataset
+from models import MambaStock
+from models import Model
+
 
 
 # A dataclass that specifies the parameters of the current run
@@ -32,6 +35,62 @@ class runConfig:
     weight_decay: float
     cuda: bool
 
+# Hard coded config for an example run
+def config() -> runConfig:
+    # Data
+    file_path = "symbols.txt"
+    symbols = read_file(file_path)
+    start_date = "2010-01-01"
+    train_split = 0.8
+
+    # Model
+    # architecture = LSTM
+    architecture = MambaStock
+    window_size = 20
+    hidden_dim = 16
+    layers = 2
+
+    # Training
+    epochs = 80
+    learning_rate = 0.01
+    weight_decay = 1e-5
+    cuda = False
+
+    return runConfig(
+        symbols,
+        start_date,
+        train_split,
+        architecture,
+        window_size,
+        hidden_dim,
+        layers,
+        epochs,
+        learning_rate,
+        weight_decay,
+        cuda,
+    )
+
+# Hard coded config for a single stock to graph predcitions of
+def graph_config(config) -> runConfig:
+    # Data
+    file_path = "graph.txt"
+    symbols = read_file(file_path)
+    start_date = "2010-01-01"
+    train_split = 0.5
+
+    return runConfig(
+        symbols,
+        start_date,
+        train_split,
+        config.architecture,
+        config.window_size,
+        config.hidden_dim,
+        config.layers,
+        config.epochs,
+        config.learning_rate,
+        config.weight_decay,
+        config.cuda,
+    )
 
 # Function for creating a runConfig from command line arguments
 def parse_args() -> runConfig:
@@ -104,7 +163,7 @@ def parse_args() -> runConfig:
 
 
 # Evaluate the results of predictions compared to the labels
-def evaluation_metric(y_test, y_hat):
+def evaluation_metric(y_test: np.ndarray, y_hat: np.ndarray) -> Tuple[float, float, float, float]:
     MSE = mean_squared_error(y_test, y_hat)
     RMSE = MSE**0.5
     MAE = mean_absolute_error(y_test, y_hat)
@@ -115,7 +174,7 @@ def evaluation_metric(y_test, y_hat):
 
 
 # Unreproducible randomness is overrated
-def set_seed(seed, cuda=False):
+def set_seed(seed: int, cuda: bool=False) -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
     if cuda:
@@ -123,7 +182,7 @@ def set_seed(seed, cuda=False):
 
 
 # Create the output plot of for the predcitions
-def make_a_plot(ds, preds, path, title):
+def make_a_plot(ds: Dataset, preds: np.ndarray, path: str, title: str) -> None:
     train = ds.data[: ds.training_data_len]
     valid = ds.data[ds.training_data_len :]
     valid["Predictions"] = preds
@@ -146,7 +205,7 @@ def train(
     trainY: np.ndarray,
     run_config: runConfig,
     v: int = 1,
-):
+) -> Model:
     opt = torch.optim.Adam(
         model.parameters(),
         lr=run_config.learning_rate,
@@ -185,7 +244,7 @@ def train(
 
 
 # Infer some thingsss
-def inference(model, testX, data, v=1, t=False, cuda=False):
+def inference(model: Model, testX: np.ndarray, data: Dataset, v: int=1, t: bool=False, cuda: bool=False) -> np.ndarray:
     xv = torch.from_numpy(testX.squeeze()).float()
 
     # if t:
@@ -211,19 +270,21 @@ def inference(model, testX, data, v=1, t=False, cuda=False):
 
 
 # Read a list (of hopefully stock symbols) from a file
-def read_file(filename):
+def read_file(filename:str) -> list[str]:
+    out = []
     try:
         with open(filename, "r") as file:
-            return [line.strip() for line in file]
+            for line in file:
+                if line[0] != '#': # Avoid comment lines
+                    out.append(line.strip())
     except FileNotFoundError:
         print(f"Error: The file '{filename}' was not found.")
-        return []
     except IOError as e:
         print(f"Error reading file '{filename}': {e}")
-        return []
+    return out
 
 
 # This one is self explanatory
-def save_model(model, file_path):
+def save_model(model: Model, file_path:str) -> None:
     torch.save(model.state_dict(), file_path)
     print(f"Model saved to {file_path}")

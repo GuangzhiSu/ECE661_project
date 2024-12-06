@@ -1,1 +1,2 @@
+# Test stock, to be plotted 
 JPM

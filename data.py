@@ -1,18 +1,21 @@
+
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
 # from sklearn.preprocessing import StandardScaler
 # from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
 
-import numpy as np
 from datetime import datetime
-import yfinance as yf
-import pandas as pd
+from typing import Tuple
 
 
 # Parent Dataset class in case we want to experiment with different datasets
 class Dataset:
     def __init__(self, inSize: int, outSize: int):
-        self.inSize = inSize
-        self.outSize = outSize
+        self.inSize = inSize # Must match model's input layer
+        self.outSize = outSize # Should always be 1 unless doing some whacky experimentation
         # self.sc = StandardScaler()
         # self.pca = PCA(n_components=inSize)
 
@@ -36,7 +39,7 @@ class yahooFinance(Dataset):
         )  # how much of the data is for training (0, 1)
 
     # Create train and test sets
-    def getData(self):
+    def getData(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         # Get the data for each stock symbol in the list
         for j, symbol in enumerate(self.symbols):
             df = yf.Ticker(symbol).history(start=self.start_date, end=datetime.now())

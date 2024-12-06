@@ -1,6 +1,7 @@
-from mamba import Mamba, MambaConfig
 import torch
 import torch.nn as nn
+
+from mamba import Mamba, MambaConfig
 
 
 # Parent class for models to ensure they all have the expected features and structure
@@ -68,7 +69,7 @@ class LSTM(Model):
         return x.flatten()
 
 
-# What's not a transformer nowadays
+# What's not a transformer nowadays?
 # NOTE: Transformers are much much more computationally expensive than the other model types
 class Transformer(Model):
     def __init__(

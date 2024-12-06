@@ -1,0 +1,21 @@
+# Super set of symbols.txt that acts as the input to a membership inference attack
+ABT
+BAC
+COST
+AAPL
+MSFT
+WFC
+MS
+TSLA
+GS
+PEP
+DIS
+HSBC
+GOOG
+CAT
+SCHW
+NVDA
+META
+NFLX
+TSM
+NOW

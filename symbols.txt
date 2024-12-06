@@ -1,3 +1,4 @@
+# These are the stock symbols that will be used to create the training and evaluation set
 BAC
 WFC
 MS
