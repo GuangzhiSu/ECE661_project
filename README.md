@@ -13,7 +13,10 @@ Controls creation and formatting of dataset
 Declarations of MambaStock model from [MamabaStock repo](https://github.com/zshicode/MambaStock)
 
 ### models.py
-Controls all the model types (MambaStock, LSTM< Transformer)
+Controls all the model types (MambaStock, LSTM, Transformer)
+
+### attacks.py
+Enables two different kinds of membership inference attacks, 1 that simply computes loss target models loss of a possible stock and 1 that trains and uses shadow models to train a membership classifier
 
 ### utils.py
 Random Utility functions for lots of things
@@ -24,8 +27,9 @@ List of stock symbols to be used in the initial training (and testing)
 ### graph.txt
 Single stock symbol to graph 
 
+### all_symbols.txt
+A superset pf stock symbols used to evaluate the success of membership inference attacks
 
 # TODO
 - Make a better README
-- Attack time
 - Probably other things
