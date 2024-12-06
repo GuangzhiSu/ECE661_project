@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -14,8 +13,10 @@ from typing import Tuple
 # Parent Dataset class in case we want to experiment with different datasets
 class Dataset:
     def __init__(self, inSize: int, outSize: int):
-        self.inSize = inSize # Must match model's input layer
-        self.outSize = outSize # Should always be 1 unless doing some whacky experimentation
+        self.inSize = inSize  # Must match model's input layer
+        self.outSize = (
+            outSize  # Should always be 1 unless doing some whacky experimentation
+        )
         # self.sc = StandardScaler()
         # self.pca = PCA(n_components=inSize)
 

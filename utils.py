@@ -14,7 +14,6 @@ from models import MambaStock
 from models import Model
 
 
-
 # A dataclass that specifies the parameters of the current run
 @dataclass
 class runConfig:
@@ -35,10 +34,11 @@ class runConfig:
     weight_decay: float
     cuda: bool
 
+
 # Hard coded config for an example run
 def config() -> runConfig:
     # Data
-    file_path = "symbols.txt"
+    file_path = "data/symbols.txt"
     symbols = read_file(file_path)
     start_date = "2010-01-01"
     train_split = 0.8
@@ -70,10 +70,11 @@ def config() -> runConfig:
         cuda,
     )
 
+
 # Hard coded config for a single stock to graph predcitions of
 def graph_config(config) -> runConfig:
     # Data
-    file_path = "graph.txt"
+    file_path = "data/graph.txt"
     symbols = read_file(file_path)
     start_date = "2010-01-01"
     train_split = 0.5
@@ -91,6 +92,7 @@ def graph_config(config) -> runConfig:
         config.weight_decay,
         config.cuda,
     )
+
 
 # Function for creating a runConfig from command line arguments
 def parse_args() -> runConfig:
@@ -163,7 +165,9 @@ def parse_args() -> runConfig:
 
 
 # Evaluate the results of predictions compared to the labels
-def evaluation_metric(y_test: np.ndarray, y_hat: np.ndarray) -> Tuple[float, float, float, float]:
+def evaluation_metric(
+    y_test: np.ndarray, y_hat: np.ndarray
+) -> Tuple[float, float, float, float]:
     MSE = mean_squared_error(y_test, y_hat)
     RMSE = MSE**0.5
     MAE = mean_absolute_error(y_test, y_hat)
@@ -174,7 +178,7 @@ def evaluation_metric(y_test: np.ndarray, y_hat: np.ndarray) -> Tuple[float, flo
 
 
 # Unreproducible randomness is overrated
-def set_seed(seed: int, cuda: bool=False) -> None:
+def set_seed(seed: int, cuda: bool = False) -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
     if cuda:
@@ -244,7 +248,14 @@ def train(
 
 
 # Infer some thingsss
-def inference(model: Model, testX: np.ndarray, data: Dataset, v: int=1, t: bool=False, cuda: bool=False) -> np.ndarray:
+def inference(
+    model: Model,
+    testX: np.ndarray,
+    data: Dataset,
+    v: int = 1,
+    t: bool = False,
+    cuda: bool = False,
+) -> np.ndarray:
     xv = torch.from_numpy(testX.squeeze()).float()
 
     # if t:
@@ -270,12 +281,12 @@ def inference(model: Model, testX: np.ndarray, data: Dataset, v: int=1, t: bool=
 
 
 # Read a list (of hopefully stock symbols) from a file
-def read_file(filename:str) -> list[str]:
+def read_file(filename: str) -> list[str]:
     out = []
     try:
         with open(filename, "r") as file:
             for line in file:
-                if line[0] != '#': # Avoid comment lines
+                if line[0] != "#":  # Avoid comment lines
                     out.append(line.strip())
     except FileNotFoundError:
         print(f"Error: The file '{filename}' was not found.")
@@ -285,6 +296,6 @@ def read_file(filename:str) -> list[str]:
 
 
 # This one is self explanatory
-def save_model(model: Model, file_path:str) -> None:
+def save_model(model: Model, file_path: str) -> None:
     torch.save(model.state_dict(), file_path)
     print(f"Model saved to {file_path}")
