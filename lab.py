@@ -11,6 +11,8 @@ from utils import (
     graph_config,
 )
 from attacks import perform_attack, perform_shadow_attack
+import os
+import torch
 
 
 def main():
@@ -18,31 +20,41 @@ def main():
     run_config = config()  # Hardcoded values from utils file
     # run_config = parse_args() # Parse cli args
 
-    # Data
-    data = yahooFinance(run_config)
-    trainX, trainY, testX, testY = data.getData()
+    # Check if the trained model file exists
+    if os.path.exists("example_model.pth"):
+        # If model exists, load it and proceed directly to the attack part
+        set_seed(1234)
+        model = run_config.architecture(
+            run_config.hidden_dim, run_config.layers, run_config.window_size, 1
+        )
+        model.load_state_dict(torch.load("example_model.pth"))
+        
+    else:
+        # Data
+        data = yahooFinance(run_config)
+        trainX, trainY, testX, testY = data.getData()
 
-    # Setup and train model
-    set_seed(1234)
-    model = run_config.architecture(
-        run_config.hidden_dim, run_config.layers, run_config.window_size, 1
-    )
-    model = train(model, trainX, trainY, run_config)
+        # Setup and train model
+        set_seed(1234)
+        model = run_config.architecture(
+            run_config.hidden_dim, run_config.layers, run_config.window_size, 1
+        )
+        model = train(model, trainX, trainY, run_config)
 
-    # Run inference and calculate error
-    model_preds = inference(model, testX, data)
-    scores = evaluation_metric(testY, model_preds)
+        # Run inference and calculate error
+        model_preds = inference(model, testX, data)
+        scores = evaluation_metric(testY, model_preds)
 
-    # Save the model
-    save_model(model, "example_model.pth")
+        # Save the model
+        save_model(model, "example_model.pth")
 
-    # Save a graph of predictions on a new stock
-    data = yahooFinance(graph_config(run_config))
-    trainX, trainY, testX, testY = data.getData()
-    # model = train(model, trainX, trainY, run_config)  # This line finetunes the model on the 'train' portion of the new stock
-    model_preds = inference(model, testX, data)
-    scores = evaluation_metric(testY, model_preds)
-    make_a_plot(data, model_preds, f"test.png", "Graph Title")
+        # Save a graph of predictions on a new stock
+        data = yahooFinance(graph_config(run_config))
+        trainX, trainY, testX, testY = data.getData()
+        # model = train(model, trainX, trainY, run_config)  # This line finetunes the model on the 'train' portion of the new stock
+        model_preds = inference(model, testX, data)
+        scores = evaluation_metric(testY, model_preds)
+        make_a_plot(data, model_preds, f"test.png", "Graph Title")
 
     # Run a membership inference attack on the trained model
     perform_attack(run_config)
