@@ -1,6 +1,6 @@
 # ECE661 Project: Membership Inference Attacks on Stock Prediction Models
 
-This is a class project for **ECE661 at Duke University**, where we investigate the vulnerabilities of stock prediction models to Membership Inference Attacks (MIA).
+This is a group class project for **ECE661 Computer Engineering Machine Learning and Deep Neural Nets at Duke University**, where we investigate the vulnerabilities of stock prediction models to Membership Inference Attacks (MIA). It's collaborated by Isaac Jacobson, Alex Niculescu, and Guangzhi Su.
 
 The project focuses on training stock price prediction models using **Transformer**, **LSTM**, and **MambaStock** architectures, and evaluating their susceptibility to two types of MIA attacks:
 1. **Loss-Based Attack**: Calculates the loss of a target model on potential stock data to infer membership.
@@ -43,6 +43,27 @@ The project focuses on training stock price prediction models using **Transforme
 ### **`all_symbols.txt`**
 - A superset of stock symbols used to evaluate the success of membership inference attacks.
 
+---
+
+## Required Libraries
+
+This project uses the following libraries. Make sure they are installed in your Python environment:
+
+- **PyTorch**: For building and training machine learning models.
+- **NumPy**: For numerical computations.
+- **Pandas**: For handling datasets.
+- **Matplotlib**: For plotting graphs and visualizations.
+- **scikit-learn**: For training classifiers and evaluating metrics.
+- **yfinance**: For accessing stock data from Yahoo Finance.
+  
+  ```bash
+  pip install torch
+  pip install numpy
+  pip install pandas
+  pip install matplotlib
+  pip install scikit-learn
+  pip install yfinance
+  
 ---
 
 ## Project Highlights
