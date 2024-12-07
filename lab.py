@@ -13,7 +13,6 @@ from utils import (
 from attacks import perform_attack, perform_shadow_attack
 import os
 import torch
-from dp_optimizer import DPAdamGaussianOptimizer  
 
 
 def main():
