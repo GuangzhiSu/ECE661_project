@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-
+from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
@@ -9,6 +9,7 @@ from utils import read_file, inference, train, set_seed, runConfig
 from typing import Tuple
 from models import Model
 from data import Dataset, yahooFinance
+import matplotlib.pyplot as plt
 
 
 # Use the 'answers' to check how successful the attack was
@@ -24,6 +25,8 @@ def evaluate_attack(answers: list[str], results: dict, v: int = 0) -> None:
                 f"Symbol: {symbol}, Prediction: {results[symbol]}, Actual: {symbol in answers}"
             )
     print(f"Successfully guessed {correct} out of {len(results.keys())}")
+    
+    return correct / len(results.keys())
 
 
 # ===================================================================================================================
@@ -60,7 +63,7 @@ def check_membership(
 
 
 # Perform a membership inference attack on the model
-def perform_attack(config: runConfig, weights_path: str = "example_model.pth") -> None:
+def perform_attack(config: runConfig, weights_path: str = "LSTM.pth") -> None:
     set_seed(1234)
     print(f"\n\nStarting a strightforward membership inference attack\n")
 
@@ -71,15 +74,33 @@ def perform_attack(config: runConfig, weights_path: str = "example_model.pth") -
     # Load the victim model
     model = config.architecture(config.hidden_dim, config.layers, config.window_size, 1)
     model.load_state_dict(torch.load(weights_path, weights_only=True))
+    
+    # Define a range of thresholds to test
+    threshold_values = np.linspace(10, 320, 40)  # 20 thresholds from 10 to 200
+    performance_scores = []
 
-    # For each possible symbol make a prediction on if it's in the training data
-    results = {}
-    for symbol in all_symbols:
-        result = check_membership(model, symbol, config, v=0)
-        results[symbol] = result
+    for threshold in threshold_values:
+        results = {}
+        for symbol in all_symbols:
+            # Predict membership at the current threshold
+            result = check_membership(model, symbol, config, threshold=threshold, v=0)
+            results[symbol] = result
 
-    # How good was this attack? Let's find out
-    evaluate_attack(answers, results, v=1)
+        # Evaluate the attack at this threshold
+        # Note: Adjust evaluate_attack to return a numeric score (e.g., accuracy)
+        score = evaluate_attack(answers, results, v=1)
+        # Assuming `score` is a numeric value (e.g., accuracy) returned by evaluate_attack
+        # If evaluate_attack currently only prints, modify it to return a value.
+        performance_scores.append(score)
+        
+    # Plot the performance vs. threshold
+    plt.figure()
+    plt.plot(threshold_values, performance_scores, marker='o')
+    plt.title("MIA Performance vs. Threshold")
+    plt.xlabel("Threshold")
+    plt.ylabel("Performance Metric (e.g., Accuracy)")
+    plt.grid(True)
+    plt.savefig("mia_performance_vs_threshold.png")
 
 
 # ===================================================================================================================
@@ -123,16 +144,18 @@ def prepare_attack_data(
     for model, data in shadow_models:
         trainX, trainY, testX, testY = data.getData()
         # Get predictions from the shadow model
-        train_preds = inference(model, testX, data, v=0)
+        train_preds = inference(model, trainX, data, v=0)
         test_preds = inference(model, testX, data, v=0)
 
         # Create a dataset for training an attack model
-        train_confidences = np.abs(train_preds - testY)
+        train_confidences = np.abs(train_preds - trainY)
         test_confidences = np.abs(test_preds - testY)
+        # Append the confidences and labels to the attack dataset
         attack_features.extend(train_confidences.tolist())
         attack_features.extend(test_confidences.tolist())
         attack_labels.extend([1] * len(train_confidences))
         attack_labels.extend([0] * len(test_confidences))
+        
 
     return np.array(attack_features), np.array(attack_labels)
 
@@ -145,6 +168,7 @@ def train_attack_model(
         attack_features, attack_labels, test_size=0.3, random_state=42
     )
     attack_model = RandomForestClassifier()  # Can be any binary classifier
+    # attack_model = SVC(kernel='linear', random_state=42, max_iter=1000)
     attack_model.fit(X_train.reshape(-1, 1), y_train)
 
     # Evaluate attack model on the created dataset
@@ -186,7 +210,7 @@ def attack_target_model(
 
 # Actually perform the attack using shadow models
 def perform_shadow_attack(
-    config: runConfig, weights_path: str = "example_model.pth"
+    config: runConfig, weights_path: str = "LSTM.pth"
 ) -> None:
     set_seed(1234)
     print(f"\n\nStarting a membership inference attack based on shadow models\n")

@@ -21,13 +21,13 @@ def main():
     # run_config = parse_args() # Parse cli args
 
     # Check if the trained model file exists
-    if os.path.exists("example_model.pth"):
+    if os.path.exists("LSTM.pth"):
         # If model exists, load it and proceed directly to the attack part
         set_seed(1234)
         model = run_config.architecture(
             run_config.hidden_dim, run_config.layers, run_config.window_size, 1
         )
-        model.load_state_dict(torch.load("example_model.pth"))
+        model.load_state_dict(torch.load("LSTM.pth"))
         
     else:
         # Data
@@ -46,7 +46,7 @@ def main():
         scores = evaluation_metric(testY, model_preds)
 
         # Save the model
-        save_model(model, "example_model.pth")
+        save_model(model, "LSTM.pth")
 
         # Save a graph of predictions on a new stock
         data = yahooFinance(graph_config(run_config))

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 from data import Dataset
-from models import MambaStock
+from models import MambaStock, Transformer, LSTM
 from models import Model
 
 
@@ -44,8 +44,9 @@ def config() -> runConfig:
     train_split = 0.8
 
     # Model
-    # architecture = LSTM
-    architecture = MambaStock
+    architecture = LSTM
+    # architecture = Transformer
+    # architecture = MambaStock
     window_size = 20
     hidden_dim = 16
     layers = 2
