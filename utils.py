@@ -12,6 +12,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from data import Dataset
 from models import MambaStock, Transformer, LSTM
 from models import Model
+from dp_optimizer import DPAdamGaussianOptimizer  
 
 
 # A dataclass that specifies the parameters of the current run
@@ -211,11 +212,23 @@ def train(
     run_config: runConfig,
     v: int = 1,
 ) -> Model:
+    
+    #normal optimizer
     opt = torch.optim.Adam(
         model.parameters(),
         lr=run_config.learning_rate,
         weight_decay=run_config.weight_decay,
     )
+    
+    # # Initialize the DP optimizer
+    # opt = DPAdamGaussianOptimizer(
+    #     model.parameters(),
+    #     l2_norm_clip=2.0,                  # Gradient clipping threshold
+    #     noise_multiplier=0.5,             # Noise multiplier for DP
+    #     num_microbatches=16,              # Number of microbatches
+    #     lr=run_config.learning_rate       # Learning rate
+    # )
+    
     xt = torch.from_numpy(trainX).float()
     yt = torch.from_numpy(trainY).float()
 
@@ -233,6 +246,8 @@ def train(
     start_time = time.time()
     for e in range(run_config.epochs):
         model.train()
+
+        #normal training process
         z = model(xt).squeeze()
         loss = F.mse_loss(z, yt)
         opt.zero_grad()
@@ -240,6 +255,21 @@ def train(
         opt.step()
         if v == 2 and e % 10 == 0 and e != 0:
             print("Epoch %d | Lossp: %.4f" % (e, loss.item()), flush=True)
+
+        # # DP optimizer training process
+
+        # # Compute DP gradients
+        # final_grads = opt.compute_grads(F.mse_loss, model, xt, yt)
+
+        # # Apply sanitized gradients
+        # opt.apply_grads(model, final_grads)
+
+        # # Optionally log progress
+        # if v == 2 and e % 10 == 0 and e != 0:
+        #     with torch.no_grad():
+        #         preds = model(xt).squeeze()
+        #         loss = F.mse_loss(preds, yt)
+        #         print(f"Epoch {e} | Loss: {loss.item():.4f}", flush=True)
     if v > 0:
         print(
             f"Training Complete, duration: %.3f" % (time.time() - start_time),

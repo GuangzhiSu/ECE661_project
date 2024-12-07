@@ -13,6 +13,7 @@ from utils import (
 from attacks import perform_attack, perform_shadow_attack
 import os
 import torch
+from dp_optimizer import DPAdamGaussianOptimizer  
 
 
 def main():
@@ -21,13 +22,13 @@ def main():
     # run_config = parse_args() # Parse cli args
 
     # Check if the trained model file exists
-    if os.path.exists("LSTM.pth"):
+    if os.path.exists("DP.pth"):
         # If model exists, load it and proceed directly to the attack part
         set_seed(1234)
         model = run_config.architecture(
             run_config.hidden_dim, run_config.layers, run_config.window_size, 1
         )
-        model.load_state_dict(torch.load("LSTM.pth"))
+        model.load_state_dict(torch.load("DP.pth"))
         
     else:
         # Data
@@ -39,6 +40,8 @@ def main():
         model = run_config.architecture(
             run_config.hidden_dim, run_config.layers, run_config.window_size, 1
         )
+        
+        
         model = train(model, trainX, trainY, run_config)
 
         # Run inference and calculate error
@@ -46,7 +49,7 @@ def main():
         scores = evaluation_metric(testY, model_preds)
 
         # Save the model
-        save_model(model, "LSTM.pth")
+        save_model(model, "DP.pth")
 
         # Save a graph of predictions on a new stock
         data = yahooFinance(graph_config(run_config))
@@ -57,10 +60,10 @@ def main():
         make_a_plot(data, model_preds, f"test.png", "Graph Title")
 
     # Run a membership inference attack on the trained model
-    perform_attack(run_config)
+    # perform_attack(run_config)
 
     # Run a more sophisticated MIA with shadow models
-    perform_shadow_attack(run_config)
+    # perform_shadow_attack(run_config)
 
 
 # Do that thing
